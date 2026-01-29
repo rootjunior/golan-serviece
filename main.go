@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	_ "encoding/json"
 	"errors"
 	"log"
@@ -11,16 +12,10 @@ import (
 	_ "some-go-project/docs"
 	_ "sync"
 	"syscall"
-	"time"
 
-	"github.com/gin-gonic/gin"
 	_ "github.com/robfig/cron/v3"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 	_ "gorm.io/gorm"
 )
-
-// ================= DI =================
 
 // @title SIP Bot API
 // @version 1.0
@@ -30,39 +25,6 @@ import (
 // @securityDefinitions.apikey BearerAuth
 // @in header
 // @name Authorization
-
-func runHTTP(ctx context.Context, cfg Config, pool *WorkerPool, state *AppState) error {
-	r := gin.Default()
-	// Прокидываем AppState в контекст Gin
-	r.Use(func(c *gin.Context) {
-		c.Set("appState", state)
-		c.Next()
-	})
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	r.GET("/posts", AuthMiddleware(), getPostsHandler)
-	r.POST("/posts", createPostHandler(pool))
-
-	srv := http.Server{
-		Addr:    cfg.ServerAddress,
-		Handler: r,
-	}
-
-	go func() {
-		<-ctx.Done()
-		log.Println("🛑 HTTP shutting down...")
-		timeout, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		err := srv.Shutdown(timeout)
-		if err != nil {
-			return
-		}
-	}()
-
-	log.Println("🚀 HTTP server started")
-	return srv.ListenAndServe()
-}
-
-/* ================= MAIN ================= */
 
 func main() {
 	ctx, cancel := signal.NotifyContext(
@@ -74,31 +36,27 @@ func main() {
 
 	cfg := LoadConfig()
 	pool := NewWorkerPool(3)
-	// Создаем AppState
 	state := NewAppState()
-
-	//// Game loop (blocking)
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				log.Println("🛑 Game loop stopped")
-				return
-			default:
-				log.Println("🎮 Game loop running")
-				time.Sleep(500 * time.Millisecond)
-			}
+	db := InitDB()
+	sqlDB, err := db.DB()
+	if err != nil {
+		log.Fatal("Failed to get sqlDB:", err)
+	}
+	defer func(sqlDB *sql.DB) {
+		err := sqlDB.Close()
+		if err != nil {
+			log.Fatal("Failed to close sqlDB:", err)
 		}
-	}()
-	InitDB()
+	}(sqlDB)
 
+	// Game
+	go RunGameLoop(ctx)
 	// Cron
-	go startCron(ctx)
-
+	go StartCron(ctx)
 	// HTTP
-	if err := runHTTP(ctx, cfg, pool, state); err != nil && !errors.Is(err, http.ErrServerClosed) {
+	server := HTTPServer{ctx, cfg, pool, state}
+	if err := server.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatal(err)
 	}
-
 	log.Println("✅ Application stopped cleanly")
 }

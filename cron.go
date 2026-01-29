@@ -7,7 +7,7 @@ import (
 	"github.com/robfig/cron/v3"
 )
 
-func startCron(ctx context.Context) {
+func StartCron(ctx context.Context) {
 	c := cron.New(cron.WithSeconds())
 
 	_, err := c.AddFunc("*/10 * * * * *", func() {

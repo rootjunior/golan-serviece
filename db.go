@@ -15,7 +15,6 @@ func InitDB() *gorm.DB {
 
 	log.Println("✅ SQLite connected")
 
-	// Автосоздание таблицы
 	err = db.AutoMigrate(&PostDB{})
 	if err != nil {
 		log.Fatal("migration failed:", err)
