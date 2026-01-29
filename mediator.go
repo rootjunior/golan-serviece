@@ -6,23 +6,19 @@ import (
 	"sync"
 )
 
-// QueryHandlerFunc — тип функции обработчика запроса
 type QueryHandlerFunc func(query interface{}) (interface{}, error)
 
-// Mediator хранит мапу query -> handler
 type Mediator struct {
 	queries map[reflect.Type]QueryHandlerFunc
 	mu      sync.RWMutex
 }
 
-// NewMediator создаёт новый медиатор
 func NewMediator() *Mediator {
 	return &Mediator{
 		queries: make(map[reflect.Type]QueryHandlerFunc),
 	}
 }
 
-// RegisterQuery регистрирует обработчик для типа query
 func (m *Mediator) RegisterQuery(queryPrototype interface{}, handler QueryHandlerFunc) {
 	t := reflect.TypeOf(queryPrototype)
 	m.mu.Lock()
@@ -30,7 +26,6 @@ func (m *Mediator) RegisterQuery(queryPrototype interface{}, handler QueryHandle
 	m.queries[t] = handler
 }
 
-// Execute вызывает обработчик для переданного запроса
 func (m *Mediator) Execute(query interface{}) (interface{}, error) {
 	t := reflect.TypeOf(query)
 	m.mu.RLock()
