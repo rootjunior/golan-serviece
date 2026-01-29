@@ -17,7 +17,7 @@ import (
 	_ "github.com/robfig/cron/v3"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-	"gorm.io/gorm"
+	_ "gorm.io/gorm"
 )
 
 // ================= DI =================
