@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package user;
+
+option go_package = "go-service/internal/transport/grpc/proto/userpb;userpb";
+
+service UserService {
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+}
+
+message CreateUserRequest {
+  string name = 1;
+}
+
+message CreateUserResponse {
+  string message = 1;
+}
