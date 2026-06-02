@@ -32,7 +32,7 @@ func RegisterMediator(m i.IMediator, createUserUC *use_cases.CreateUserUseCase, 
 
 func RunHooks(
 	lifecycle fx.Lifecycle,
-	worker *worker.WorkerPool,
+	worker i.IWorkerPool,
 	serverREST *rest.Server,
 	serverGRPC *grpc.Server,
 	cfg *config.Config,
