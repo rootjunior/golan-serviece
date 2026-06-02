@@ -30,7 +30,7 @@ func RegisterMediator(m i.IMediator, createUserUC *use_cases.CreateUserUseCase, 
 	m.RegisterEvent(events.UserCreateEvent{}, userCreatedEH)
 }
 
-gitfunc RunHooks(
+func RunHooks(
 	lifecycle fx.Lifecycle,
 	worker *worker.WorkerPool,
 	serverREST *rest.Server,
