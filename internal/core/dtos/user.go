@@ -7,9 +7,6 @@ type PostRequest struct {
 	Body  *string `json:"body"`
 }
 
-type Task struct {
-	Post PostRequest
-}
 type Post struct {
 	ID    int    `json:"id"`
 	Title string `json:"title"`
