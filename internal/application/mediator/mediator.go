@@ -35,17 +35,17 @@ func NewMediator(bus *bus.EventBus) *Mediator {
 // RegisterQuery регистрирует обработчик для указанного типа запроса.
 // queryPrototype — пустой экземпляр типа запроса, используется для получения reflect.Type.
 // Повторная регистрация перезаписывает предыдущий обработчик.
-func (m *Mediator) RegisterQuery(queryPrototype interface{}, handler QueryUseCase) {
-	t := reflect.TypeOf(queryPrototype)
+func (m *Mediator) RegisterQuery(queryPrototype Query, handler QueryUseCase) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	t := reflect.TypeOf(queryPrototype)
 	m.queries[t] = handler
 }
 
 // ExecuteQuery выполняет запрос и возвращает результат.
 // Определяет обработчик по типу query и вызывает его Execute.
 // Возвращает ошибку если обработчик для данного типа не зарегистрирован.
-func (m *Mediator) ExecuteQuery(query interface{}) (interface{}, error) {
+func (m *Mediator) ExecuteQuery(query Query) (Result, error) {
 	t := reflect.TypeOf(query)
 	m.mu.RLock()
 	handler, ok := m.queries[t]
@@ -61,10 +61,10 @@ func (m *Mediator) ExecuteQuery(query interface{}) (interface{}, error) {
 // RegisterCommand регистрирует один или несколько обработчиков для указанного типа команды.
 // commandPrototype — пустой экземпляр типа команды, используется для получения reflect.Type.
 // Несколько вызовов RegisterCommand для одного типа добавляют обработчики к существующим.
-func (m *Mediator) RegisterCommand(commandPrototype interface{}, handlers ...CommandUseCase) {
-	t := reflect.TypeOf(commandPrototype)
+func (m *Mediator) RegisterCommand(commandPrototype Command, handlers ...CommandUseCase) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	t := reflect.TypeOf(commandPrototype)
 	m.commands[t] = append(m.commands[t], handlers...)
 }
 
@@ -72,7 +72,7 @@ func (m *Mediator) RegisterCommand(commandPrototype interface{}, handlers ...Com
 // Возвращает список результатов от каждого обработчика.
 // Прерывает выполнение и возвращает ошибку если любой обработчик вернул ошибку.
 // Возвращает ошибку если обработчики для данного типа не зарегистрированы.
-func (m *Mediator) ExecuteCommand(ctx context.Context, command interface{}) ([]interface{}, error) {
+func (m *Mediator) ExecuteCommand(ctx context.Context, command Command) ([]Result, error) {
 	t := reflect.TypeOf(command)
 	m.mu.RLock()
 	handlers, ok := m.commands[t]
@@ -81,7 +81,7 @@ func (m *Mediator) ExecuteCommand(ctx context.Context, command interface{}) ([]i
 		return nil, fmt.Errorf("no handlers registered for command type %v", t)
 	}
 
-	results := make([]interface{}, 0, len(handlers))
+	results := make([]Result, 0, len(handlers))
 	for _, handler := range handlers {
 		result, err := handler.Execute(ctx, command) // было handler(command)
 		if err != nil {
@@ -97,18 +97,17 @@ func (m *Mediator) ExecuteCommand(ctx context.Context, command interface{}) ([]i
 // RegisterEvent регистрирует один или несколько обработчиков для указанного типа события.
 // eventPrototype — пустой экземпляр типа события, используется для получения reflect.Type.
 // Несколько вызовов RegisterEvent для одного типа добавляют обработчики к существующим событиям.
-func (m *Mediator) RegisterEvent(eventPrototype interface{}, handlers ...EventHandler) {
-	t := reflect.TypeOf(eventPrototype)
+func (m *Mediator) RegisterEvent(eventPrototype Event, handlers ...EventHandler) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	t := reflect.TypeOf(eventPrototype)
 	m.events[t] = append(m.events[t], handlers...)
 }
 
 // HandleEvent синхронно обрабатывает событие через все зарегистрированные обработчики.
-// Вызывается воркерами EventBus после получения события из канала.
 // Прерывает выполнение и возвращает ошибку если любой обработчик вернул ошибку.
 // Возвращает ошибку если обработчики для данного типа не зарегистрированы.
-func (m *Mediator) HandleEvent(ctx context.Context, event interface{}) error {
+func (m *Mediator) HandleEvent(ctx context.Context, event Event) error {
 	t := reflect.TypeOf(event)
 	m.mu.RLock()
 	handlers, ok := m.events[t]
@@ -136,7 +135,7 @@ func (m *Mediator) HandleEvent(ctx context.Context, event interface{}) error {
 // Если ctx отменяется до отправки всех событий — возвращает ошибку,
 // уже отправленные (переданные в канал) события продолжат обработку либо будут потеряны
 // в случае сетевых или системных сбоев.
-func (m *Mediator) PublishEvents(ctx context.Context, events ...interface{}) error {
+func (m *Mediator) PublishEvents(ctx context.Context, events ...Event) error {
 	for _, event := range events {
 		select {
 		case <-ctx.Done():

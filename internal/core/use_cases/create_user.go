@@ -3,22 +3,20 @@ package use_cases
 import (
 	"context"
 	"fmt"
-	"go-service/internal/core/commands"
 	"go-service/internal/core/events"
-	i "go-service/internal/core/interfaces"
+	. "go-service/internal/core/interfaces"
 )
 
 type CreateUserUseCase struct {
-	mediator i.IMediator
+	mediator IMediator
 }
 
-func NewCreateUserUseCase(mediator i.IMediator) *CreateUserUseCase {
+func NewCreateUserUseCase(mediator IMediator) *CreateUserUseCase {
 	return &CreateUserUseCase{mediator: mediator}
 }
 
-func (uc *CreateUserUseCase) Execute(ctx context.Context, command interface{}) (interface{}, error) {
-	cmd := command.(commands.CreateUserCommand)
-	_ = cmd
+func (uc *CreateUserUseCase) Execute(ctx context.Context, command Command) (Result, error) {
+	_ = command
 	err := uc.mediator.PublishEvents(ctx, events.UserCreateEvent{}, events.UserCreateEvent{}, events.UserCreateEvent{}, events.UserCreateEvent{}, events.UserCreateEvent{})
 	if err != nil {
 		return nil, err

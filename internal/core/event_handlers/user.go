@@ -15,7 +15,7 @@ func NewUserCreatedEventHandler(mediator i.IMediator) *UserCreatedEventHandler {
 	return &UserCreatedEventHandler{mediator: mediator}
 }
 
-func (eh *UserCreatedEventHandler) Execute(ctx context.Context, event interface{}) error {
+func (eh *UserCreatedEventHandler) Execute(ctx context.Context, event i.Event) error {
 	e := event.(events.UserCreateEvent)
 	fmt.Println("Было обработано событе")
 	_ = e

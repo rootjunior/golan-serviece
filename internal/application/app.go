@@ -14,7 +14,7 @@ import (
 	"go-service/internal/presentation/grpc"
 	grpccontrollers "go-service/internal/presentation/grpc/controllers"
 	"go-service/internal/presentation/rest"
-	restcontrollers "go-service/internal/presentation/rest/controllers"
+	restV1 "go-service/internal/presentation/rest/v1"
 
 	"go-service/internal/infrastructure/worker"
 	"log"
@@ -61,7 +61,7 @@ func NewApplication() *fx.App {
 	return fx.New(
 		fx.Provide(
 			bus.NewEventBus,
-			restcontrollers.NewUserController,
+			restV1.NewController,
 			grpccontrollers.NewUserController,
 			fx.Annotate(mediator.NewMediator, fx.As(new(i.IMediator))),
 			fx.Annotate(worker.NewWorkerPool, fx.As(new(i.IWorkerPool))),

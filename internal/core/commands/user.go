@@ -1,3 +1,5 @@
 package commands
 
-type CreateUserCommand struct{}
+type CreateUserCommand struct {
+	BaseCommand
+}

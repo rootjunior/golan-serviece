@@ -1,3 +1,5 @@
 package events
 
-type UserCreateEvent struct{}
+type UserCreateEvent struct {
+	BaseEvent
+}

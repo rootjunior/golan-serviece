@@ -3,13 +3,13 @@ package interfaces
 import "context"
 
 type CommandUseCase interface {
-	Execute(ctx context.Context, command interface{}) (interface{}, error)
+	Execute(ctx context.Context, command Command) (Result, error)
 }
 
 type QueryUseCase interface {
-	Execute(query interface{}) (interface{}, error)
+	Execute(query Query) (Result, error)
 }
 
 type EventHandler interface {
-	Execute(ctx context.Context, event interface{}) error
+	Execute(ctx context.Context, event Event) error
 }

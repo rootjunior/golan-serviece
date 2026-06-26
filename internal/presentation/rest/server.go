@@ -5,7 +5,7 @@ import (
 	"errors"
 	_ "go-service/docs"
 	"go-service/internal/config"
-	"go-service/internal/presentation/rest/controllers"
+	"go-service/internal/presentation/rest/v1"
 	"log"
 	"net/http"
 	"time"
@@ -17,13 +17,13 @@ import (
 )
 
 type Server struct {
-	cfg        config.Config
-	controller *controllers.UserController
-	srv        *http.Server
+	cfg config.Config
+	v1  *v1.Controller
+	srv *http.Server
 }
 
-func NewServer(cfg *config.Config, c *controllers.UserController) *Server {
-	return &Server{cfg: *cfg, controller: c}
+func NewServer(cfg *config.Config, v1 *v1.Controller) *Server {
+	return &Server{cfg: *cfg, v1: v1}
 }
 
 func (s *Server) run(ctx context.Context) error {
@@ -46,7 +46,7 @@ func (s *Server) run(ctx context.Context) error {
 		swaggerFiles.Handler,
 		ginSwagger.URL("/swagger/doc.json"),
 	))
-	r.POST("/posts", AuthMiddleware(), s.controller.CreateUser)
+	r.POST("/posts", AuthMiddleware(), s.v1.CreateUser)
 
 	s.srv = &http.Server{
 		Addr:    s.cfg.ServerRESTAddress,
