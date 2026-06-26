@@ -1,21 +1,21 @@
-package event_handlers
+package handlers
 
 import (
 	"context"
 	"fmt"
 	"go-service/internal/core/events"
-	i "go-service/internal/core/interfaces"
+	. "go-service/internal/core/interfaces"
 )
 
 type UserCreatedEventHandler struct {
-	mediator i.IMediator
+	mediator Mediator
 }
 
-func NewUserCreatedEventHandler(mediator i.IMediator) *UserCreatedEventHandler {
+func NewUserCreatedEventHandler(mediator Mediator) *UserCreatedEventHandler {
 	return &UserCreatedEventHandler{mediator: mediator}
 }
 
-func (eh *UserCreatedEventHandler) Execute(ctx context.Context, event i.Event) error {
+func (eh *UserCreatedEventHandler) Execute(ctx context.Context, event Event) error {
 	e := event.(events.UserCreateEvent)
 	fmt.Println("Было обработано событе")
 	_ = e

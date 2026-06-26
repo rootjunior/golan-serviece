@@ -2,13 +2,13 @@ package application
 
 import (
 	"context"
+	"go-service/internal/application/bootstrap"
 	"go-service/internal/application/mediator"
+	"go-service/internal/application/worker"
+
 	"go-service/internal/config"
-	"go-service/internal/core/commands"
-	"go-service/internal/core/event_handlers"
-	"go-service/internal/core/events"
-	i "go-service/internal/core/interfaces"
-	"go-service/internal/core/use_cases"
+	"go-service/internal/core/handlers"
+	. "go-service/internal/core/interfaces"
 	"go-service/internal/infrastructure/bus"
 	"go-service/internal/infrastructure/services"
 	"go-service/internal/presentation/grpc"
@@ -16,23 +16,14 @@ import (
 	"go-service/internal/presentation/rest"
 	restV1 "go-service/internal/presentation/rest/v1"
 
-	"go-service/internal/infrastructure/worker"
 	"log"
 
 	"go.uber.org/fx"
 )
 
-func RegisterMediator(m i.IMediator, createUserUC *use_cases.CreateUserUseCase, userCreatedEH *event_handlers.UserCreatedEventHandler) {
-	// Queries
-	// Command
-	m.RegisterCommand(commands.CreateUserCommand{}, createUserUC)
-	// Events
-	m.RegisterEvent(events.UserCreateEvent{}, userCreatedEH)
-}
-
 func RunHooks(
 	lifecycle fx.Lifecycle,
-	worker i.IWorkerPool,
+	worker WorkerPool,
 	serverREST *rest.Server,
 	serverGRPC *grpc.Server,
 	cfg *config.Config,
@@ -60,21 +51,21 @@ func RunHooks(
 func NewApplication() *fx.App {
 	return fx.New(
 		fx.Provide(
-			bus.NewEventBus,
 			restV1.NewController,
 			grpccontrollers.NewUserController,
-			fx.Annotate(mediator.NewMediator, fx.As(new(i.IMediator))),
-			fx.Annotate(worker.NewWorkerPool, fx.As(new(i.IWorkerPool))),
+			fx.Annotate(bus.NewEventBus, fx.As(new(EventBus))),
+			fx.Annotate(mediator.NewMediator, fx.As(new(Mediator))),
+			fx.Annotate(worker.NewWorkerPool, fx.As(new(WorkerPool))),
 			config.NewConfig,
 			services.NewPostClient,
-			use_cases.NewCreateUserUseCase,
+			handlers.NewCreateUserHandler,
 			grpc.NewServer,
 			rest.NewServer,
-			event_handlers.NewUserCreatedEventHandler,
+			handlers.NewUserCreatedEventHandler,
 		),
 
 		fx.Invoke(
-			RegisterMediator,
+			bootstrap.RegisterMediator,
 			RunHooks,
 		),
 	)

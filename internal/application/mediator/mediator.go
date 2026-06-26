@@ -4,27 +4,26 @@ import (
 	"context"
 	"fmt"
 	. "go-service/internal/core/interfaces"
-	"go-service/internal/infrastructure/bus"
 	"reflect"
 	"sync"
 )
 
-// Mediator реализует паттерн Mediator для маршрутизации команд, запросов и событий
+// ImplMediator реализует паттерн Mediator для маршрутизации команд, запросов и событий
 // между компонентами приложения без прямых зависимостей между ними.
-type Mediator struct {
-	queries  map[reflect.Type]QueryUseCase
-	commands map[reflect.Type][]CommandUseCase
+type ImplMediator struct {
+	queries  map[reflect.Type]QueryHandler
+	commands map[reflect.Type][]CommandHandler
 	events   map[reflect.Type][]EventHandler
-	bus      *bus.EventBus
+	bus      EventBus
 	mu       sync.RWMutex
 }
 
 // NewMediator создаёт новый экземпляр Mediator.
 // Принимает EventBus для асинхронной публикации событий.
-func NewMediator(bus *bus.EventBus) *Mediator {
-	return &Mediator{
-		queries:  make(map[reflect.Type]QueryUseCase),
-		commands: make(map[reflect.Type][]CommandUseCase),
+func NewMediator(bus EventBus) Mediator {
+	return &ImplMediator{
+		queries:  make(map[reflect.Type]QueryHandler),
+		commands: make(map[reflect.Type][]CommandHandler),
 		events:   make(map[reflect.Type][]EventHandler),
 		bus:      bus,
 	}
@@ -35,17 +34,17 @@ func NewMediator(bus *bus.EventBus) *Mediator {
 // RegisterQuery регистрирует обработчик для указанного типа запроса.
 // queryPrototype — пустой экземпляр типа запроса, используется для получения reflect.Type.
 // Повторная регистрация перезаписывает предыдущий обработчик.
-func (m *Mediator) RegisterQuery(queryPrototype Query, handler QueryUseCase) {
+func (m *ImplMediator) RegisterQuery(queryPrototype Query, handler QueryHandler) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	t := reflect.TypeOf(queryPrototype)
 	m.queries[t] = handler
 }
 
-// ExecuteQuery выполняет запрос и возвращает результат.
-// Определяет обработчик по типу query и вызывает его Execute.
+// HandleQuery выполняет запрос и возвращает результат.
+// Определяет обработчик по типу query и вызывает его Handle.
 // Возвращает ошибку если обработчик для данного типа не зарегистрирован.
-func (m *Mediator) ExecuteQuery(query Query) (Result, error) {
+func (m *ImplMediator) HandleQuery(query Query) (Result, error) {
 	t := reflect.TypeOf(query)
 	m.mu.RLock()
 	handler, ok := m.queries[t]
@@ -61,18 +60,18 @@ func (m *Mediator) ExecuteQuery(query Query) (Result, error) {
 // RegisterCommand регистрирует один или несколько обработчиков для указанного типа команды.
 // commandPrototype — пустой экземпляр типа команды, используется для получения reflect.Type.
 // Несколько вызовов RegisterCommand для одного типа добавляют обработчики к существующим.
-func (m *Mediator) RegisterCommand(commandPrototype Command, handlers ...CommandUseCase) {
+func (m *ImplMediator) RegisterCommand(commandPrototype Command, handlers ...CommandHandler) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	t := reflect.TypeOf(commandPrototype)
 	m.commands[t] = append(m.commands[t], handlers...)
 }
 
-// ExecuteCommand выполняет команду через все зарегистрированные обработчики последовательно.
+// HandleCommand выполняет команду через все зарегистрированные обработчики последовательно.
 // Возвращает список результатов от каждого обработчика.
 // Прерывает выполнение и возвращает ошибку если любой обработчик вернул ошибку.
 // Возвращает ошибку если обработчики для данного типа не зарегистрированы.
-func (m *Mediator) ExecuteCommand(ctx context.Context, command Command) ([]Result, error) {
+func (m *ImplMediator) HandleCommand(ctx context.Context, command Command) ([]Result, error) {
 	t := reflect.TypeOf(command)
 	m.mu.RLock()
 	handlers, ok := m.commands[t]
@@ -97,7 +96,7 @@ func (m *Mediator) ExecuteCommand(ctx context.Context, command Command) ([]Resul
 // RegisterEvent регистрирует один или несколько обработчиков для указанного типа события.
 // eventPrototype — пустой экземпляр типа события, используется для получения reflect.Type.
 // Несколько вызовов RegisterEvent для одного типа добавляют обработчики к существующим событиям.
-func (m *Mediator) RegisterEvent(eventPrototype Event, handlers ...EventHandler) {
+func (m *ImplMediator) RegisterEvent(eventPrototype Event, handlers ...EventHandler) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	t := reflect.TypeOf(eventPrototype)
@@ -107,7 +106,7 @@ func (m *Mediator) RegisterEvent(eventPrototype Event, handlers ...EventHandler)
 // HandleEvent синхронно обрабатывает событие через все зарегистрированные обработчики.
 // Прерывает выполнение и возвращает ошибку если любой обработчик вернул ошибку.
 // Возвращает ошибку если обработчики для данного типа не зарегистрированы.
-func (m *Mediator) HandleEvent(ctx context.Context, event Event) error {
+func (m *ImplMediator) HandleEvent(ctx context.Context, event Event) error {
 	t := reflect.TypeOf(event)
 	m.mu.RLock()
 	handlers, ok := m.events[t]
@@ -135,7 +134,7 @@ func (m *Mediator) HandleEvent(ctx context.Context, event Event) error {
 // Если ctx отменяется до отправки всех событий — возвращает ошибку,
 // уже отправленные (переданные в канал) события продолжат обработку либо будут потеряны
 // в случае сетевых или системных сбоев.
-func (m *Mediator) PublishEvents(ctx context.Context, events ...Event) error {
+func (m *ImplMediator) PublishEvents(ctx context.Context, events ...Event) error {
 	for _, event := range events {
 		select {
 		case <-ctx.Done():

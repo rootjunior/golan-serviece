@@ -3,16 +3,16 @@ package controllers
 import (
 	"context"
 	"go-service/internal/core/commands"
-	i "go-service/internal/core/interfaces"
+	. "go-service/internal/core/interfaces"
 	pb "go-service/internal/presentation/grpc/proto"
 )
 
 type UserController struct {
 	pb.UnimplementedUserServiceServer
-	mediator i.IMediator
+	mediator Mediator
 }
 
-func NewUserController(mediator i.IMediator) *UserController {
+func NewUserController(mediator Mediator) *UserController {
 	return &UserController{
 		mediator: mediator,
 	}
@@ -23,7 +23,7 @@ func (h *UserController) CreateUser(
 	req *pb.CreateUserRequest,
 ) (*pb.CreateUserResponse, error) {
 
-	_, err := h.mediator.ExecuteCommand(
+	_, err := h.mediator.HandleCommand(
 		ctx,
 		commands.CreateUserCommand{},
 	)

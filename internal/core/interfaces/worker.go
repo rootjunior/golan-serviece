@@ -2,6 +2,6 @@ package interfaces
 
 import "context"
 
-type IWorkerPool interface {
+type WorkerPool interface {
 	StartProcessEvents(ctx context.Context)
 }

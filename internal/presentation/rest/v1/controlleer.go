@@ -1,11 +1,11 @@
 package v1
 
-import i "go-service/internal/core/interfaces"
+import . "go-service/internal/core/interfaces"
 
 type Controller struct {
-	mediator i.IMediator
+	mediator Mediator
 }
 
-func NewController(m i.IMediator) *Controller {
+func NewController(m Mediator) *Controller {
 	return &Controller{mediator: m}
 }

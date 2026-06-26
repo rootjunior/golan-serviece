@@ -4,27 +4,26 @@ import (
 	"context"
 	"fmt"
 	"go-service/internal/config"
-	i "go-service/internal/core/interfaces"
-	"go-service/internal/infrastructure/bus"
+	. "go-service/internal/core/interfaces"
 	"sync"
 )
 
-type WorkerPool struct {
-	mediator     i.IMediator
-	bus          *bus.EventBus
+type ImplWorkerPool struct {
+	mediator     Mediator
+	bus          EventBus
 	mu           sync.RWMutex
 	workersCount int
 }
 
-func NewWorkerPool(cfg *config.Config, mediator i.IMediator, bus *bus.EventBus) *WorkerPool {
-	return &WorkerPool{
+func NewWorkerPool(cfg *config.Config, mediator Mediator, bus EventBus) WorkerPool {
+	return &ImplWorkerPool{
 		mediator:     mediator,
 		bus:          bus,
 		workersCount: cfg.WorkersCount,
 	}
 }
 
-func (w *WorkerPool) StartProcessEvents(ctx context.Context) {
+func (w *ImplWorkerPool) StartProcessEvents(ctx context.Context) {
 	var wg sync.WaitGroup
 
 	for range w.workersCount {

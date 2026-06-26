@@ -2,11 +2,11 @@ package interfaces
 
 import "context"
 
-type CommandUseCase interface {
+type CommandHandler interface {
 	Execute(ctx context.Context, command Command) (Result, error)
 }
 
-type QueryUseCase interface {
+type QueryHandler interface {
 	Execute(query Query) (Result, error)
 }
 

@@ -1,4 +1,4 @@
-package use_cases
+package handlers
 
 import (
 	"context"
@@ -7,15 +7,15 @@ import (
 	. "go-service/internal/core/interfaces"
 )
 
-type CreateUserUseCase struct {
-	mediator IMediator
+type CreateUserHandler struct {
+	mediator Mediator
 }
 
-func NewCreateUserUseCase(mediator IMediator) *CreateUserUseCase {
-	return &CreateUserUseCase{mediator: mediator}
+func NewCreateUserHandler(mediator Mediator) *CreateUserHandler {
+	return &CreateUserHandler{mediator: mediator}
 }
 
-func (uc *CreateUserUseCase) Execute(ctx context.Context, command Command) (Result, error) {
+func (uc *CreateUserHandler) Execute(ctx context.Context, command Command) (Result, error) {
 	_ = command
 	err := uc.mediator.PublishEvents(ctx, events.UserCreateEvent{}, events.UserCreateEvent{}, events.UserCreateEvent{}, events.UserCreateEvent{}, events.UserCreateEvent{})
 	if err != nil {

@@ -2,17 +2,17 @@ package bus
 
 import (
 	"go-service/internal/config"
-	i "go-service/internal/core/interfaces"
+	. "go-service/internal/core/interfaces"
 
 	"sync"
 )
 
 type RingChannel struct {
-	ch chan i.Event
+	ch chan Event
 	mu sync.Mutex
 }
 
-func (r *RingChannel) Send(v i.Event) {
+func (r *RingChannel) Send(v Event) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if len(r.ch) == cap(r.ch) {
@@ -28,18 +28,18 @@ func (r *RingChannel) Close() {
 	close(r.ch)
 }
 
-func (r *RingChannel) Receive() <-chan i.Event {
+func (r *RingChannel) Receive() <-chan Event {
 	return r.ch
 }
 
-type EventBus struct {
+type ImplEventBus struct {
 	*RingChannel
 }
 
-func NewEventBus(cfg *config.Config) *EventBus {
-	return &EventBus{
+func NewEventBus(cfg *config.Config) EventBus {
+	return &ImplEventBus{
 		RingChannel: &RingChannel{
-			ch: make(chan i.Event, cfg.EventBusSize),
+			ch: make(chan Event, cfg.EventBusSize),
 		},
 	}
 }

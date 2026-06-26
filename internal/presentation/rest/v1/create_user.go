@@ -20,7 +20,7 @@ import (
 // @Failure 500 {object} errors.ErrorSchema
 // @Router /posts [post]
 func (h *Controller) CreateUser(ctx *gin.Context) {
-	posts, err := h.mediator.ExecuteCommand(ctx, commands.CreateUserCommand{})
+	posts, err := h.mediator.HandleCommand(ctx, commands.CreateUserCommand{})
 	if err != nil {
 		fmt.Println(err)
 		errors.HandleError(ctx, err)
