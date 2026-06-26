@@ -9,7 +9,7 @@ import (
 
 func RegisterMediator(m Mediator, createUserHandler *handlers.CreateUserHandler, userCreatedEH *handlers.UserCreatedEventHandler) {
 	// Queries
-	// Command
+	// Commands
 	m.RegisterCommand(commands.CreateUserCommand{}, createUserHandler)
 	// Events
 	m.RegisterEvent(events.UserCreateEvent{}, userCreatedEH)

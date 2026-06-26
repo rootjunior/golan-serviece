@@ -7,8 +7,10 @@
 // @name Authorization
 package main
 
-import "go-service/internal/application"
+import (
+	. "go-service/internal/application/app"
+)
 
 func main() {
-	application.NewApplication().Run()
+	NewApplication().Run()
 }
