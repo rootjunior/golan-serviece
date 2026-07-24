@@ -19,8 +19,8 @@ import (
 // @Failure 400 {object} errors.ErrorSchema
 // @Failure 500 {object} errors.ErrorSchema
 // @Router /posts [post]
-func (h *Controller) CreateUser(ctx *gin.Context) {
-	posts, err := h.mediator.HandleCommand(ctx, commands.CreateUserCommand{})
+func (c *Controller) CreateUser(ctx *gin.Context) {
+	posts, err := c.mediator.HandleCommand(ctx, commands.CreateUserCommand{})
 	if err != nil {
 		fmt.Println(err)
 		errors.HandleError(ctx, err)
